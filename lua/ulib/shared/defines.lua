@@ -540,6 +540,14 @@ if SERVER then
 	ULib.DELETE_USERS_QUERY = "DELETE FROM ulib_users;"
 	-- Get all users from the database
 	ULib.SELECT_USERS_QUERY = "SELECT * FROM ulib_users;"
+
+	--[[
+		Database engine related settings
+	]]
+	ULib.VALID_DB_TYPES = {
+		["sqlite"] = true,
+		["mysqloo"] = false -- No mysqloo support as of now
+	}
 end
 
 --[[
