@@ -110,8 +110,7 @@ end
 
 local function writeBan( bandata )
 	sql.Query(
-		"REPLACE INTO ulib_bans (steamid, time, unban, reason, name, admin, modified_admin, modified_time) " ..
-		string.format( "VALUES (%s, %i, %i, %s, %s, %s, %s, %s)",
+		string.format( ULib.WRITE_BAN_QUERY,
 			util.SteamIDTo64( bandata.steamID ),
 			bandata.time or 0,
 			bandata.unban or 0,
@@ -220,7 +219,7 @@ function ULib.unban( steamid, admin )
 
 	--ULib banlist
 	ULib.bans[ steamid ] = nil
-	sql.Query( "DELETE FROM ulib_bans WHERE steamid=" .. util.SteamIDTo64( steamid ) )
+	sql.Query( string.format( ULib.DELETE_BAN_QUERY, util.SteamIDTo64( steamid ) ) )
 	hook.Call( ULib.HOOK_USER_UNBANNED, _, steamid, admin )
 
 end
@@ -234,18 +233,9 @@ end
 
 -- Init our bans table
 if not sql.TableExists( "ulib_bans" ) then
-	sql.Query( "CREATE TABLE IF NOT EXISTS ulib_bans ( " ..
-		"steamid INTEGER NOT NULL PRIMARY KEY, " ..
-		"time INTEGER NOT NULL, " ..
-		"unban INTEGER NOT NULL, " ..
-		"reason TEXT, " ..
-		"name TEXT, " ..
-		"admin TEXT, " ..
-		"modified_admin TEXT, " ..
-		"modified_time INTEGER " ..
-		");" )
-	sql.Query( "CREATE INDEX IDX_ULIB_BANS_TIME ON ulib_bans ( time DESC );" )
-	sql.Query( "CREATE INDEX IDX_ULIB_BANS_UNBAN ON ulib_bans ( unban DESC );" )
+	sql.Query( ULib.CREATE_BAN_TABLE_QUERY )
+	sql.Query( ULib.CREATE_BAN_TIME_INDEX_QUERY )
+	sql.Query( ULib.CREATE_BAN_UNBAN_INDEX_QUERY )
 end
 
 local LEGACY_BANS_FILE = "data/ulib/bans.txt"
@@ -277,7 +267,7 @@ local legacy_bans = ULib.getLegacyBans()
 	Refreshes the ULib bans.
 ]]
 function ULib.refreshBans()
-	local results = sql.Query( "SELECT * FROM ulib_bans" )
+	local results = sql.Query( ULib.SELECT_BANS_QUERY )
 
 	ULib.bans = {}
 	if results then

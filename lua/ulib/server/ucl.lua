@@ -118,15 +118,7 @@ end
 local isFirstTimeDBSetup = false
 local function generateUserDB()
 	if not sql.TableExists("ulib_users") then
-		sql.Query([[
-			CREATE TABLE IF NOT EXISTS ulib_users (
-				steamid TEXT NOT NULL PRIMARY KEY,
-				name TEXT NULL,
-				usergroup TEXT NOT NULL DEFAULT "user",
-				allow TEXT,
-				deny TEXT
-			);
-		]])
+		sql.Query( ULib.CREATE_USER_TABLE_QUERY )
 		isFirstTimeDBSetup = true
 	end
 end
@@ -145,25 +137,15 @@ function ucl.saveUser( steamid, userInfo )
 	table.sort( userInfo.deny )
 	local allow, deny = util.TableToJSON( userInfo.allow ), util.TableToJSON( userInfo.deny )
 
-	sql.Query(string.format([[
-		REPLACE INTO ulib_users
-			(steamid, name, usergroup, allow, deny)
-		VALUES
-			('%s', '%s', '%s', '%s', '%s');
-	]], escape( steamid ), escape( userInfo.name or "" ), escape( userInfo.group ), escape( allow ), escape( deny )))
+	sql.Query(string.format( ULib.SAVE_USER_QUERY, escape( steamid ), escape( userInfo.name or "" ), escape( userInfo.group ), escape( allow ), escape( deny )))
 end
 
 function ucl.deleteUser( steamid )
-	sql.Query(string.format([[
-		DELETE FROM
-			ulib_users
-		WHERE
-			steamid = '%s'
-	]], escape( steamid )))
+	sql.Query(string.format( ULib.DELETE_USER_QUERY, escape( steamid )))
 end
 
 function ucl.deleteUsers()
-	sql.Query([[DELETE FROM ulib_users;]])
+	sql.Query( ULib.DELETE_USERS_QUERY )
 end
 
 local function reloadGroups()
@@ -263,7 +245,7 @@ reloadGroups()
 local function loadUsersFromDB()
 	-- No cap, the sqlite errors should always be reset when making a new query.
 	sql.m_strError = nil
-	local users = sql.Query( "SELECT * FROM ulib_users;" )
+	local users = sql.Query( ULib.SELECT_USERS_QUERY )
 	if not users then
 		local err = sql.LastError()
 		if err then

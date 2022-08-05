@@ -477,6 +477,72 @@ ULib.DEFAULT_GRANT_ACCESS = { allow={}, deny={}, guest=true }
 end
 
 --[[
+	Section: Database Queries
+
+	These queries are being used to save and load data from the sqlite database.
+]]
+if SERVER then
+	--[[
+		Ban related queries
+	]]
+	-- Write a ban to the database
+	ULib.WRITE_BAN_QUERY = "REPLACE INTO ulib_bans (steamid, time, unban, reason, name, admin, modified_admin, modified_time) VALUES (%s, %i, %i, %s, %s, %s, %s, %s)"
+	-- Remove a ban from the database
+	ULib.DELETE_BAN_QUERY = "DELETE FROM ulib_bans WHERE steamid=%s"
+	-- Create the ban table
+	ULib.CREATE_BAN_TABLE_QUERY = [[
+		CREATE TABLE IF NOT EXISTS ulib_bans (
+			steamid INTEGER NOT NULL PRIMARY KEY,
+			time INTEGER NOT NULL,
+			unban INTEGER NOT NULL,
+			reason TEXT,
+			name TEXT,
+			admin TEXT,
+			modified_admin TEXT,
+			modified_time INTEGER
+		);
+	]]
+	-- Create the time index
+	ULib.CREATE_BAN_TIME_INDEX_QUERY = "CREATE INDEX IDX_ULIB_BANS_TIME ON ulib_bans ( time DESC );"
+	-- Create the unban index
+	ULib.CREATE_BAN_UNBAN_INDEX_QUERY = "CREATE INDEX IDX_ULIB_BANS_UNBAN ON ulib_bans ( unban DESC );"
+	-- Get all bans from the database
+	ULib.SELECT_BANS_QUERY = "SELECT * FROM ulib_bans"
+
+	--[[
+		User related queries
+	]]
+	-- Create the users table
+	ULib.CREATE_USER_TABLE_QUERY = [[
+		CREATE TABLE IF NOT EXISTS ulib_users (
+			steamid TEXT NOT NULL PRIMARY KEY,
+			name TEXT NULL,
+			usergroup TEXT NOT NULL DEFAULT "user",
+			allow TEXT,
+			deny TEXT
+		);
+	]]
+	-- Save user to the database
+	ULib.SAVE_USER_QUERY = [[
+		REPLACE INTO ulib_users
+			(steamid, name, usergroup, allow, deny)
+		VALUES
+			('%s', '%s', '%s', '%s', '%s');
+	]]
+	-- Delete user from the database
+	ULib.DELETE_USER_QUERY = [[
+		DELETE FROM
+			ulib_users
+		WHERE
+			steamid = '%s';
+	]]
+	-- Delete all users from the database
+	ULib.DELETE_USERS_QUERY = "DELETE FROM ulib_users;"
+	-- Get all users from the database
+	ULib.SELECT_USERS_QUERY = "SELECT * FROM ulib_users;"
+end
+
+--[[
 	Section: Net pooled strings
 
 	These defines are server-only, to help with the networking library.
